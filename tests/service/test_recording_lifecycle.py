@@ -7,6 +7,7 @@ import pytest
 from service.audio_file_manager import AudioFileManager
 from service.audio_recorder import AudioRecorder
 from service.clipboard_manager import ClipboardManager
+from service.docs_output import DocsOutput
 from service.recording_lifecycle import RecordingLifecycle
 from service.transcription_handler import TranscriptionHandler
 from app.ui_queue_processor import UIQueueProcessor
@@ -34,6 +35,7 @@ def _make_lifecycle(config_dict: dict | None = None):
     transcription_handler.use_punctuation = True
 
     clipboard_manager = Mock(spec=ClipboardManager)
+    docs_output = Mock(spec=DocsOutput)
     ui_processor = Mock(spec=UIQueueProcessor)
     ui_processor.is_ui_valid.return_value = True
     ui_processor.is_shutting_down = False
@@ -46,7 +48,7 @@ def _make_lifecycle(config_dict: dict | None = None):
 
         lifecycle = RecordingLifecycle(
             master, config, recorder, audio_file_manager,
-            transcription_handler, clipboard_manager,
+            transcription_handler, clipboard_manager, docs_output,
             ui_processor, notification_callback
         )
         lifecycle.recording_timer = mock_timer

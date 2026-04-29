@@ -141,6 +141,26 @@ class AppConfig:
     def window_height(self) -> int:
         return get_config_value(self._config, 'WINDOW', 'HEIGHT', 450)
 
+    # --- GOOGLE_DOCS ---
+    @property
+    def google_docs_url(self) -> str:
+        return get_config_value(self._config, 'GOOGLE_DOCS', 'DOCS_URL', '')
+
+    # --- OUTPUT ---
+    @property
+    def output_mode(self) -> str:
+        """出力モード ('paste' または 'docs')"""
+        value = get_config_value(self._config, 'OUTPUT', 'MODE', 'paste')
+        return value if value in ('paste', 'docs') else 'paste'
+
+    @output_mode.setter
+    def output_mode(self, value: str) -> None:
+        if value not in ('paste', 'docs'):
+            raise ValueError(f'未知の出力モード: {value}')
+        if 'OUTPUT' not in self._config:
+            self._config['OUTPUT'] = {}
+        self._config['OUTPUT']['MODE'] = value
+
     # --- OPTIONS ---
     @property
     def start_minimized(self) -> bool:

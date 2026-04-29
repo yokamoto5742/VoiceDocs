@@ -29,6 +29,7 @@ class VoiceInputManager:
             'toggle_recording': self.toggle_recording,
             'toggle_punctuation': self.toggle_punctuation,
             'reload_audio': lambda: None,
+            'output_mode_change': self.change_output_mode,
         })
         self.ui_components.setup_ui(version)
 
@@ -36,6 +37,7 @@ class VoiceInputManager:
             'toggle_recording': self.toggle_recording,
             'toggle_punctuation': self.toggle_punctuation,
             'reload_audio': self.ui_components.reload_latest_audio,
+            'output_mode_change': self.change_output_mode,
         })
 
         recording_lifecycle.wire_ui_callbacks(
@@ -68,6 +70,12 @@ class VoiceInputManager:
         self.config.use_punctuation = use_punctuation
         self.config.use_comma = use_punctuation
         save_config(self.config.raw_config)
+
+    def change_output_mode(self, mode: str) -> None:
+        self.recording_lifecycle.output_mode = mode
+        self.config.output_mode = mode
+        save_config(self.config.raw_config)
+        logging.info(f'出力モード変更: {mode}')
 
     def close_application(self) -> None:
         if getattr(self, '_closed', False):

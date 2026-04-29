@@ -3,6 +3,7 @@ name = "voicedocs"
 version = "1.0.0"
 requires-python = ">=3.13"
 dependencies = [
+    "google-api-python-client==2.149.0",
     "google-cloud-speech==2.38.0",
     "keyboard==0.13.5",
     "PyAudio==0.2.14",
