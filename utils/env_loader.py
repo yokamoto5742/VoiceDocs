@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-APP_DIR_NAME = 'VoicePhrase'
+APP_DIR_NAME = 'VoiceDocs'
 ENV_FILE_NAME = '.env'
 
 
