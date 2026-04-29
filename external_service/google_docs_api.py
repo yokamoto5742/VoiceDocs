@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, List, Optional, Tuple
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -90,3 +90,64 @@ def append_text(client: GoogleDocsClient, text: str) -> None:
         body={'requests': requests},
     ).execute()
     logging.info(f'Docs追加完了: {len(text)}文字')
+
+
+def insert_text_at_end(client: GoogleDocsClient, text: str) -> Tuple[int, int]:
+    """ドキュメント末尾に挿入し、挿入範囲(start, end)を返す"""
+    if not text:
+        raise ValueError('挿入テキストが空です')
+
+    insert_index = _get_end_index(client)
+    requests = [{
+        'insertText': {
+            'location': {'index': insert_index},
+            'text': text,
+        }
+    }]
+    client.service.documents().batchUpdate(  # type: ignore[attr-defined]
+        documentId=client.document_id,
+        body={'requests': requests},
+    ).execute()
+    return insert_index, insert_index + len(text)
+
+
+def replace_range(
+        client: GoogleDocsClient,
+        start_index: int,
+        end_index: int,
+        text: str,
+) -> None:
+    """指定範囲を削除し、同じ位置にテキストを挿入する"""
+    requests: List[dict[str, Any]] = [{
+        'deleteContentRange': {
+            'range': {'startIndex': start_index, 'endIndex': end_index},
+        }
+    }]
+    if text:
+        requests.append({
+            'insertText': {
+                'location': {'index': start_index},
+                'text': text,
+            }
+        })
+    client.service.documents().batchUpdate(  # type: ignore[attr-defined]
+        documentId=client.document_id,
+        body={'requests': requests},
+    ).execute()
+    logging.info(f'Docs置換完了: {end_index - start_index}文字 -> {len(text)}文字')
+
+
+def delete_range(client: GoogleDocsClient, start_index: int, end_index: int) -> None:
+    """指定範囲を削除する"""
+    if start_index >= end_index:
+        return
+    requests = [{
+        'deleteContentRange': {
+            'range': {'startIndex': start_index, 'endIndex': end_index},
+        }
+    }]
+    client.service.documents().batchUpdate(  # type: ignore[attr-defined]
+        documentId=client.document_id,
+        body={'requests': requests},
+    ).execute()
+    logging.info(f'Docs削除完了: {end_index - start_index}文字')

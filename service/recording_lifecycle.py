@@ -76,6 +76,8 @@ class RecordingLifecycle:
                 self._ui_callbacks['update_record_button'](False)
                 if self.recorder.is_recording:
                     self.recorder.stop_recording()
+                if self._output_mode == 'docs' and self.docs_output.is_available():
+                    self.docs_output.clear_placeholder()
         except Exception as e:
             logging.error(f'エラーハンドリング中にエラー: {str(e)}')
 
@@ -106,6 +108,8 @@ class RecordingLifecycle:
 
         self.transcription_handler.reset_cancel()
         self.recorder.start_recording()
+        if self._output_mode == 'docs' and self.docs_output.is_available():
+            self.docs_output.show_placeholder()
         self._ui_callbacks['update_record_button'](True)
         self._ui_callbacks['update_status_label'](
             f'音声入力中... ({self.config.toggle_recording_key}キーで停止)'
