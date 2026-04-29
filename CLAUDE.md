@@ -25,7 +25,7 @@ Dependencies are managed with `uv`. After cloning: `uv sync`, then activate `.ve
 
 ## Architecture
 
-VoicePhrase is a Windows speech-to-text tool that captures voice via Pause key and pastes transcribed text into any active window using Win32 SendInput.
+VoiceDocs is a Windows speech-to-text tool that captures voice via Pause key and pastes transcribed text into any active window using Win32 SendInput.
 
 **Layer structure:**
 

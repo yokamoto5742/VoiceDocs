@@ -4,9 +4,9 @@ def build_executable():
 
     subprocess.run([
         "pyinstaller",
-        "--name=VoicePhrase",
+        "--name=VoiceDocs",
         "--windowed",
-        "--icon=assets/VoicePhrase.ico",
+        "--icon=assets/VoiceDocs.ico",
         "--add-data", "utils/config.ini:.",
         "--add-data", "data/replacements.txt:.",
         "--add-data", "data/technical_terms.txt:.",

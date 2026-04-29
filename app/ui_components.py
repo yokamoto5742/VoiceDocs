@@ -45,6 +45,8 @@ class UIComponents:
         self.master.title(f'VoicePhrase v{version}')
         self.master.geometry(f'{self.config.window_width}x{self.config.window_height}')
 
+        self._setup_output_mode_combobox()
+
         self.record_button = tk.Button(
             self.master,
             text='音声入力開始',
@@ -114,12 +116,10 @@ class UIComponents:
         )
         self.status_label.pack(pady=10)
 
-        self._setup_output_mode_combobox()
-
     def _setup_output_mode_combobox(self) -> None:
         """画面下部に出力モード選択用のプルダウンを配置する"""
         frame = tk.Frame(self.master)
-        frame.pack(side=tk.BOTTOM, pady=10)
+        frame.pack(pady=10)
 
         tk.Label(frame, text='出力モード:').pack(side=tk.LEFT, padx=(0, 5))
 
