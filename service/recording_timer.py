@@ -60,10 +60,8 @@ class RecordingTimer:
 
     def _auto_stop_ui(self) -> None:
         try:
-            self.show_notification('自動停止', 'アプリケーションを終了します')
+            self.show_notification('自動停止', '音声入力を自動停止しました')
             self.on_auto_stop()
-            if self.ui_processor.is_ui_valid():
-                self.master.after(1000, self.master.quit)
         except Exception as e:
             logging.error(f'自動停止処理中にエラー: {str(e)}')
 

@@ -229,9 +229,9 @@ class TestRecordingTimerAutoStop:
         """正常系: 自動停止のUIコールバック実行"""
         self.timer._auto_stop_ui()
 
-        self.mock_notification.assert_called_once_with("自動停止", "アプリケーションを終了します")
+        self.mock_notification.assert_called_once_with("自動停止", "音声入力を自動停止しました")
         self.mock_on_auto_stop.assert_called_once()
-        self.mock_master.after.assert_called_once_with(1000, self.mock_master.quit)
+        self.mock_master.after.assert_not_called()
 
     def test_auto_stop_ui_with_exception(self):
         """異常系: 自動停止UI処理で例外発生時は通知のみ行い after は呼ばない"""
@@ -240,7 +240,6 @@ class TestRecordingTimerAutoStop:
         self.timer._auto_stop_ui()
 
         self.mock_notification.assert_called_once()
-        # 例外後は master.after(quit) をスケジュールしない
         self.mock_master.after.assert_not_called()
 
     def test_auto_stop_ui_when_ui_invalid(self):
