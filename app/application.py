@@ -54,7 +54,9 @@ class Application:
             docs_client = None
 
         docs_output = DocsOutput(
-            docs_client, replacements, notification_manager.show_timed_message
+            docs_client, replacements, notification_manager.show_timed_message,
+            config.google_docs_placeholder_text,
+            config.google_docs_placeholder_wait_timeout,
         )
 
         transcription_handler = TranscriptionHandler(

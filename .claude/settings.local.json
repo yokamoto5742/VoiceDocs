@@ -12,13 +12,13 @@
       "Bash(claude config list)",
       "Bash(powershell:*)",
       "Bash(claude config get hooks)",
+      "Bash(git commit:*)",
       "Bash(dir:*)",
       "Bash(python -m pytest tests/ -v --tb=short --disable-warnings)",
       "Bash(rm:*)"
     ],
     "deny": [
       "Bash(git push:*)",
-      "Bash(git commit:*)",
       "Bash(git reset:*)",
       "Bash(git rebase:*)",
       "Read(.env.*)",

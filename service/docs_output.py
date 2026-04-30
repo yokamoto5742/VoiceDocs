@@ -11,10 +11,6 @@ from external_service.google_docs_api import (
 )
 from service.text_transformer import remove_ja_en_spaces, replace_text
 
-PLACEHOLDER_TEXT = '音声入力中…(60秒以内)'
-PLACEHOLDER_WAIT_TIMEOUT = 10.0
-
-
 class DocsOutput:
     """文字起こしテキストをGoogle Docs末尾へ追記する"""
 
@@ -23,10 +19,14 @@ class DocsOutput:
             client: Optional[GoogleDocsClient],
             replacements: Dict[str, str],
             error_callback: Callable[[str, str], None],
+            placeholder_text: str = '音声入力中…(60秒以内)',
+            placeholder_wait_timeout: float = 10.0,
     ):
         self._client = client
         self._replacements = replacements
         self._show_error = error_callback
+        self._placeholder_text = placeholder_text
+        self._placeholder_wait_timeout = placeholder_wait_timeout
         self._placeholder_range: Optional[Tuple[int, int]] = None
         self._placeholder_event = threading.Event()
         self._placeholder_event.set()
@@ -51,7 +51,7 @@ class DocsOutput:
         try:
             with self._lock:
                 assert self._client is not None
-                start, end = insert_text_at_end(self._client, PLACEHOLDER_TEXT)
+                start, end = insert_text_at_end(self._client, self._placeholder_text)
                 self._placeholder_range = (start, end)
         except Exception as e:
             logging.error(f'プレースホルダ挿入中にエラー: {type(e).__name__}: {str(e)}')
@@ -78,7 +78,7 @@ class DocsOutput:
     def _append_in_thread(self, text: str) -> None:
         try:
             transformed = remove_ja_en_spaces(replace_text(text, self._replacements))
-            self._placeholder_event.wait(timeout=PLACEHOLDER_WAIT_TIMEOUT)
+            self._placeholder_event.wait(timeout=self._placeholder_wait_timeout)
             with self._lock:
                 assert self._client is not None
                 if not transformed:
@@ -108,7 +108,7 @@ class DocsOutput:
 
     def _clear_placeholder_in_thread(self) -> None:
         try:
-            self._placeholder_event.wait(timeout=PLACEHOLDER_WAIT_TIMEOUT)
+            self._placeholder_event.wait(timeout=self._placeholder_wait_timeout)
             with self._lock:
                 self._delete_placeholder_locked()
         except Exception as e:
