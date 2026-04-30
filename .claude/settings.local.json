@@ -71,6 +71,16 @@
             "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('タスクが完了しました', 'Claude Code', 'OK', 'Information')\""
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "git statusを実行してコミットされていない変更を確認してください。変更がある場合は以下の手順を実行してください:\n1. git diff --stat HEAD でどのファイルが変更されたか確認\n2. git add -A でステージング\n3. 変更内容を分析し .claude/rules/commit.md のルールに従いコミットメッセージを生成: ✨ feat / 🐛 fix / 📝 docs / ♻️ refactor / ✅ test のプレフィックスを使用し変更内容と理由を日本語で記述\n4. git commit -m \"<生成したメッセージ>\" を実行\n変更がない場合は何もしないでください。",
+            "timeout": 120,
+            "statusMessage": "変更を自動コミット中..."
+          }
+        ]
       }
     ]
   }
