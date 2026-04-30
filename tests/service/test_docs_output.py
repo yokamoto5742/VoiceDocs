@@ -22,7 +22,7 @@ def _make_client() -> GoogleDocsClient:
 def _make_docs_output(
     client: GoogleDocsClient | None = None,
     placeholder_text: str = '音声入力中…',
-    placeholder_wait_timeout: float = 1.0,
+    placeholder_wait_timeout: int = 1,
 ) -> DocsOutput:
     error_cb = MagicMock()
     return DocsOutput(
@@ -166,8 +166,8 @@ class TestDocsOutputPlaceholderConfig:
         assert output._placeholder_text == 'カスタムテキスト'
 
     def test_custom_wait_timeout_used(self):
-        output = _make_docs_output(client=None, placeholder_wait_timeout=5.5)
-        assert output._placeholder_wait_timeout == 5.5
+        output = _make_docs_output(client=None, placeholder_wait_timeout=5)
+        assert output._placeholder_wait_timeout == 5
 
     def test_default_placeholder_text(self):
         output = DocsOutput(client=None, replacements={}, error_callback=MagicMock())
@@ -175,4 +175,4 @@ class TestDocsOutputPlaceholderConfig:
 
     def test_default_wait_timeout(self):
         output = DocsOutput(client=None, replacements={}, error_callback=MagicMock())
-        assert output._placeholder_wait_timeout == 10.0
+        assert output._placeholder_wait_timeout == 10

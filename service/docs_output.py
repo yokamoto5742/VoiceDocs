@@ -20,7 +20,7 @@ class DocsOutput:
             replacements: Dict[str, str],
             error_callback: Callable[[str, str], None],
             placeholder_text: str = '音声入力中…(60秒以内)',
-            placeholder_wait_timeout: float = 10.0,
+            placeholder_wait_timeout: int = 10,
     ):
         self._client = client
         self._replacements = replacements

@@ -151,8 +151,8 @@ class AppConfig:
         return get_config_value(self._config, 'GOOGLE_DOCS', 'PLACEHOLDER_TEXT', '音声入力中…(60秒以内)')
 
     @property
-    def google_docs_placeholder_wait_timeout(self) -> float:
-        return get_config_value(self._config, 'GOOGLE_DOCS', 'PLACEHOLDER_WAIT_TIMEOUT', 10.0)
+    def google_docs_placeholder_wait_timeout(self) -> int:
+        return get_config_value(self._config, 'GOOGLE_DOCS', 'PLACEHOLDER_WAIT_TIMEOUT', 10)
 
     # --- OUTPUT ---
     @property
