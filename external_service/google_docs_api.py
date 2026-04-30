@@ -43,7 +43,7 @@ def _load_service_account_credentials(value: str) -> service_account.Credentials
 
 
 def setup_google_docs_client(config: AppConfig) -> Optional[GoogleDocsClient]:
-    """Google Docsクライアントを構築する。URL未設定時はNoneを返す"""
+    """Google Docsクライアントを構築する"""
     url = config.google_docs_url
     if not url:
         return None
@@ -63,12 +63,12 @@ def setup_google_docs_client(config: AppConfig) -> Optional[GoogleDocsClient]:
 
 def _get_end_index(client: GoogleDocsClient) -> int:
     """ドキュメント本文末尾のendIndexを取得する"""
-    document = client.service.documents().get(documentId=client.document_id).execute()  # type: ignore[attr-defined]
+    document = client.service.documents().get(documentId=client.document_id).execute()  # 
     body_content = document.get('body', {}).get('content', [])
     if not body_content:
         return 1
     last_end = body_content[-1].get('endIndex', 1)
-    # endIndexは末尾改行の次の位置を指すため、挿入位置はその直前
+    # endIndexは末尾改行の次の位置を指すため挿入位置はその直前
     return max(1, last_end - 1)
 
 
@@ -85,7 +85,7 @@ def append_text(client: GoogleDocsClient, text: str) -> None:
             'text': text,
         }
     }]
-    client.service.documents().batchUpdate(  # type: ignore[attr-defined]
+    client.service.documents().batchUpdate(  # 
         documentId=client.document_id,
         body={'requests': requests},
     ).execute()
@@ -104,7 +104,7 @@ def insert_text_at_end(client: GoogleDocsClient, text: str) -> Tuple[int, int]:
             'text': text,
         }
     }]
-    client.service.documents().batchUpdate(  # type: ignore[attr-defined]
+    client.service.documents().batchUpdate(  # 
         documentId=client.document_id,
         body={'requests': requests},
     ).execute()
@@ -130,7 +130,7 @@ def replace_range(
                 'text': text,
             }
         })
-    client.service.documents().batchUpdate(  # type: ignore[attr-defined]
+    client.service.documents().batchUpdate(  # 
         documentId=client.document_id,
         body={'requests': requests},
     ).execute()
@@ -146,7 +146,7 @@ def delete_range(client: GoogleDocsClient, start_index: int, end_index: int) -> 
             'range': {'startIndex': start_index, 'endIndex': end_index},
         }
     }]
-    client.service.documents().batchUpdate(  # type: ignore[attr-defined]
+    client.service.documents().batchUpdate(  # 
         documentId=client.document_id,
         body={'requests': requests},
     ).execute()

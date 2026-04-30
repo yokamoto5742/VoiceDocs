@@ -11,7 +11,7 @@ from external_service.google_docs_api import (
 )
 from service.text_transformer import remove_ja_en_spaces, replace_text
 
-PLACEHOLDER_TEXT = '音声入力中…'
+PLACEHOLDER_TEXT = '音声入力中…(60秒以内)'
 PLACEHOLDER_WAIT_TIMEOUT = 10.0
 
 
