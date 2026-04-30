@@ -1,8 +1,10 @@
 import argparse
 import json
 import sys
+import tkinter as tk
 from datetime import datetime
 from pathlib import Path
+from tkinter import filedialog
 
 
 def minify_json_file(input_path: str) -> bool:
@@ -34,24 +36,15 @@ def minify_json_file(input_path: str) -> bool:
     return True
 
 
-def get_file_path_interactive() -> str:
-    while True:
-        input_path = input("入力JSONファイルのパスを入力してください: ").strip()
-
-        if not input_path:
-            print("ファイルパスが入力されていません。もう一度入力してください。")
-            continue
-
-        if not input_path.lower().endswith('.json'):
-            print("警告: ファイル拡張子が .json ではありません。続行しますか？ (y/n): ", end="")
-            if input().strip().lower() not in ['y', 'yes', 'はい']:
-                continue
-
-        if not Path(input_path).exists():
-            print(f"エラー: ファイル '{input_path}' が見つかりません。もう一度入力してください。")
-            continue
-
-        return input_path
+def select_file_with_dialog() -> str | None:
+    root = tk.Tk()
+    root.withdraw()
+    path = filedialog.askopenfilename(
+        title="JSONファイルを選択",
+        filetypes=[("JSONファイル", "*.json"), ("すべてのファイル", "*.*")],
+    )
+    root.destroy()
+    return path or None
 
 
 def main() -> None:
@@ -70,7 +63,6 @@ def main() -> None:
         nargs='?',
         help='入力JSONファイルのパス（省略可能）'
     )
-
     args = parser.parse_args()
 
     if args.input_file:
@@ -79,8 +71,11 @@ def main() -> None:
             print(f"エラー: ファイル '{input_path}' が見つかりません", file=sys.stderr)
             sys.exit(1)
     else:
-        print("=== JSONファイルMinifyツール ===")
-        input_path = get_file_path_interactive()
+        selected = select_file_with_dialog()
+        if not selected:
+            print("ファイルが選択されませんでした", file=sys.stderr)
+            sys.exit(1)
+        input_path = selected
 
     if not minify_json_file(input_path):
         sys.exit(1)
