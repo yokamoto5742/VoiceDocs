@@ -27,34 +27,26 @@ class KeyboardHandler:
 
     def setup_keyboard_listeners(self) -> None:
         bindings = [
-            (self.config.toggle_recording_key, self._handle_toggle_recording_key),
-            (self.config.exit_app_key, self._handle_exit_key),
-            (self.config.toggle_punctuation_key, self._handle_toggle_punctuation_key),
-            (self.config.reload_audio_key, self._handle_reload_audio_key),
+            (self.config.toggle_recording_key, self._toggle_recording),
+            (self.config.exit_app_key, self._close_application),
+            (self.config.toggle_punctuation_key, self._toggle_punctuation),
+            (self.config.reload_audio_key, self._reload_audio),
         ]
-        for key, handler in bindings:
+        for key, callback in bindings:
             if not key:
                 continue
             try:
-                keyboard.on_press_key(key, handler)
+                keyboard.add_hotkey(
+                    key,
+                    lambda cb=callback: self.master.after(0, cb),
+                    suppress=False,
+                )
             except Exception as e:
-                logging.error(f'キーバインド設定失敗 ({key}): {e}')
-
-    def _handle_toggle_recording_key(self, _: keyboard.KeyboardEvent) -> None:
-        self.master.after(0, self._toggle_recording)
-
-    def _handle_exit_key(self, _: keyboard.KeyboardEvent) -> None:
-        self.master.after(0, self._close_application)
-
-    def _handle_toggle_punctuation_key(self, _: keyboard.KeyboardEvent) -> None:
-        self.master.after(0, self._toggle_punctuation)
-
-    def _handle_reload_audio_key(self, _: keyboard.KeyboardEvent) -> None:
-        self.master.after(0, self._reload_audio)
+                logging.error(f"キーバインド設定失敗 ({key}): {e}")
 
     @staticmethod
     def cleanup() -> None:
         try:
             keyboard.unhook_all()
         except Exception as e:
-            logging.error(f'キーボードリスナー解放失敗: {e}')
+            logging.error(f"キーボードリスナー解放失敗: {e}")
