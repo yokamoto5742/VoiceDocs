@@ -35,8 +35,7 @@ def load_config() -> configparser.ConfigParser:
         with open(config_path, encoding='utf-8') as f:
             config.read_file(f)
     except FileNotFoundError:
-        print(f"設定ファイルが見つかりません: {config_path}")
-        raise
+        print(f"設定ファイルが見つかりません。デフォルト設定で起動します: {config_path}")
     except PermissionError:
         print(f"設定ファイルを読み取る権限がありません: {config_path}")
         raise
