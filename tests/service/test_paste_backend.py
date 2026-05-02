@@ -252,10 +252,10 @@ class TestSafeClipboardCopy:
 class TestSafePasteText:
     """テキスト貼り付け機能のテストクラス"""
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.time.sleep')
-    def test_safe_paste_text_success(self, mock_sleep, mock_paste, mock_send):
+    def test_safe_paste_text_success(self, mock_sleep, mock_paste, mock_controller):
         """正常系: 貼り付け成功"""
         # Arrange
         mock_paste.return_value = "テストテキスト"
@@ -266,7 +266,8 @@ class TestSafePasteText:
         # Assert
         assert result is True
         mock_paste.assert_called_once()
-        mock_send.assert_called_once_with('ctrl+v')
+        mock_controller.press.assert_called_once_with('v')
+        mock_controller.release.assert_called_once_with('v')
         # safe_paste_text内でsleepが2回呼ばれる: 0.05秒と0.1秒
         assert mock_sleep.call_count == 2
 
@@ -298,17 +299,17 @@ class TestSafePasteText:
         assert result is False
         assert "クリップボードが空です" in caplog.text
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.time.sleep')
     def test_safe_paste_text_keyboard_exception(
-        self, mock_sleep, mock_paste, mock_send, caplog
+        self, mock_sleep, mock_paste, mock_controller, caplog
     ):
-        """異常系: keyboard.sendで例外発生"""
+        """異常系: _keyboard_controllerで例外発生"""
         # Arrange
         caplog.set_level(logging.ERROR)
         mock_paste.return_value = "テストテキスト"
-        mock_send.side_effect = Exception("キーボードエラー")
+        mock_controller.pressed.side_effect = Exception("キーボードエラー")
 
         # Act
         result = safe_paste_text()
@@ -331,10 +332,10 @@ class TestSafePasteText:
         assert result is False
         assert "貼り付け操作に失敗" in caplog.text
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.time.sleep')
-    def test_safe_paste_text_whitespace_content(self, mock_sleep, mock_paste, mock_send):
+    def test_safe_paste_text_whitespace_content(self, mock_sleep, mock_paste, mock_controller):
         """境界値: 空白のみのクリップボード内容"""
         # Arrange
         mock_paste.return_value = "   "
@@ -344,12 +345,12 @@ class TestSafePasteText:
 
         # Assert
         assert result is True
-        mock_send.assert_called_once_with('ctrl+v')
+        mock_controller.press.assert_called_once_with('v')
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.time.sleep')
-    def test_safe_paste_text_large_content(self, mock_sleep, mock_paste, mock_send):
+    def test_safe_paste_text_large_content(self, mock_sleep, mock_paste, mock_controller):
         """境界値: 大きなクリップボード内容"""
         # Arrange
         mock_paste.return_value = "テスト" * 10000
@@ -359,12 +360,12 @@ class TestSafePasteText:
 
         # Assert
         assert result is True
-        mock_send.assert_called_once_with('ctrl+v')
+        mock_controller.press.assert_called_once_with('v')
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.time.sleep')
-    def test_safe_paste_text_special_characters(self, mock_sleep, mock_paste, mock_send):
+    def test_safe_paste_text_special_characters(self, mock_sleep, mock_paste, mock_controller):
         """正常系: 特殊文字を含む内容"""
         # Arrange
         mock_paste.return_value = "改行\n\tタブ\r\n特殊!@#"
@@ -374,7 +375,7 @@ class TestSafePasteText:
 
         # Assert
         assert result is True
-        mock_send.assert_called_once_with('ctrl+v')
+        mock_controller.press.assert_called_once_with('v')
 
     @pytest.mark.parametrize("clipboard_content,expected", [
         ("テスト", True),
@@ -384,11 +385,11 @@ class TestSafePasteText:
         ("   ", True),
         ("123", True),
     ])
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.time.sleep')
     def test_safe_paste_text_parametrized(
-        self, mock_sleep, mock_paste, mock_send, clipboard_content, expected
+        self, mock_sleep, mock_paste, mock_controller, clipboard_content, expected
     ):
         """パラメータ化テスト: 様々なクリップボード内容"""
         # Arrange
@@ -447,11 +448,11 @@ class TestIsPasteAvailable:
 class TestIntegrationScenarios:
     """統合シナリオテスト"""
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.pyperclip.copy')
     @patch('service.paste_backend.time.sleep')
-    def test_full_copy_paste_workflow(self, mock_sleep, mock_copy, mock_paste, mock_send):
+    def test_full_copy_paste_workflow(self, mock_sleep, mock_copy, mock_paste, mock_controller):
         """正常系: コピーから貼り付けまでの完全なワークフロー"""
         # Arrange
         test_text = "統合テストテキスト"
@@ -469,13 +470,13 @@ class TestIntegrationScenarios:
 
         # Assert - 貼り付け成功
         assert paste_result is True
-        mock_send.assert_called_once_with('ctrl+v')
+        mock_controller.press.assert_called_once_with('v')
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.pyperclip.copy')
     @patch('service.paste_backend.time.sleep')
-    def test_copy_failure_prevents_paste(self, mock_sleep, mock_copy, mock_paste, mock_send):
+    def test_copy_failure_prevents_paste(self, mock_sleep, mock_copy, mock_paste, mock_controller):
         """異常系: コピー失敗時は貼り付けを実行しない"""
         # Arrange
         test_text = "テストテキスト"
@@ -489,7 +490,7 @@ class TestIntegrationScenarios:
 
         # このシナリオでは貼り付けは実行されない
         # （実際のアプリケーションではコピー成功を確認してから貼り付けを呼ぶ）
-        mock_send.assert_not_called()
+        mock_controller.press.assert_not_called()
 
     def test_paste_availability_check_workflow(self):
         """正常系: 貼り付け機能の利用可否確認ワークフロー"""
@@ -501,17 +502,17 @@ class TestIntegrationScenarios:
 
         # 利用可能な場合のみ実際の操作に進む
         if is_available:
-            with patch('service.paste_backend.keyboard.send'), \
+            with patch('service.paste_backend._keyboard_controller'), \
                  patch('service.paste_backend.pyperclip.paste', return_value="test"), \
                  patch('service.paste_backend.time.sleep'):
                 result = safe_paste_text()
                 assert result is True
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.pyperclip.copy')
     @patch('service.paste_backend.time.sleep')
-    def test_error_recovery_workflow(self, mock_sleep, mock_copy, mock_paste, mock_send, caplog):
+    def test_error_recovery_workflow(self, mock_sleep, mock_copy, mock_paste, mock_controller, caplog):
         """異常系: エラーからの回復ワークフロー"""
         # Arrange
         caplog.set_level(logging.ERROR)
@@ -556,10 +557,10 @@ class TestPerformance:
         # モック使用時は実際のクリップボード操作がないため、非常に高速
         assert (end_time - start_time) < 1.0
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.time.sleep')
-    def test_paste_operation_timing(self, mock_sleep, mock_paste, mock_send):
+    def test_paste_operation_timing(self, mock_sleep, mock_paste, mock_controller):
         """パフォーマンス: 貼り付け操作のタイミング"""
         # Arrange
         mock_paste.return_value = "テストテキスト"
@@ -607,10 +608,10 @@ class TestEdgeCases:
         assert result is True
         mock_copy.assert_called_once_with(text)
 
-    @patch('service.paste_backend.keyboard.send')
+    @patch('service.paste_backend._keyboard_controller')
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.time.sleep')
-    def test_paste_with_newline_content(self, mock_sleep, mock_paste, mock_send):
+    def test_paste_with_newline_content(self, mock_sleep, mock_paste, mock_controller):
         """エッジケース: 改行を含むクリップボード内容"""
         # Arrange
         mock_paste.return_value = "行1\n行2\n行3"
@@ -620,7 +621,7 @@ class TestEdgeCases:
 
         # Assert
         assert result is True
-        mock_send.assert_called_once_with('ctrl+v')
+        mock_controller.press.assert_called_once_with('v')
 
     @patch('service.paste_backend.pyperclip.paste')
     @patch('service.paste_backend.pyperclip.copy')

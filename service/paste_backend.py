@@ -2,8 +2,10 @@ import logging
 import time
 import traceback
 
-import keyboard
 import pyperclip
+from pynput.keyboard import Controller, Key
+
+_keyboard_controller = Controller()
 
 logger = logging.getLogger(__name__)
 
@@ -45,18 +47,16 @@ def safe_paste_text() -> bool:
 
         time.sleep(0.05)
 
-        logger.debug("keyboard.send('ctrl+v')実行前")
-        keyboard.send('ctrl+v')
-        logger.debug("keyboard.send('ctrl+v')実行後")
+        logger.debug("ctrl+v 送信前")
+        with _keyboard_controller.pressed(Key.ctrl):
+            _keyboard_controller.press('v')
+            _keyboard_controller.release('v')
+        logger.debug("ctrl+v 送信後")
 
         time.sleep(0.1)
         logger.debug("safe_paste_text完了")
         return True
 
-    except AttributeError as e:
-        logger.error(f"keyboard属性エラー: {e}")
-        logger.debug(f"詳細: {traceback.format_exc()}")
-        return False
     except OSError as e:
         logger.error(f"OSエラー（キーボード操作失敗）: {e}")
         logger.debug(f"詳細: {traceback.format_exc()}")

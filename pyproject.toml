@@ -5,7 +5,7 @@ requires-python = ">=3.13"
 dependencies = [
     "google-api-python-client==2.149.0",
     "google-cloud-speech==2.38.0",
-    "keyboard==0.13.5",
+    "pynput==1.7.7",
     "PyAudio==0.2.14",
     "pyperclip==1.9.0",
     "python-dotenv==1.1.1",
