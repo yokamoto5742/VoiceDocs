@@ -60,10 +60,6 @@ class TestAppConfigPaths:
             path = config.replacements_file
         assert path == os.path.join('/mocked/meipass', 'replacements.txt')
 
-    def test_replacements_backup_default(self):
-        """正常系: デフォルトは空文字列"""
-        assert dict_to_app_config({}).replacements_backup == ''
-
 
 class TestAppConfigFormatting:
     """フォーマット設定プロパティのテストクラス"""

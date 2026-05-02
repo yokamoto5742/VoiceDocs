@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Optional
@@ -18,7 +17,6 @@ class ReplacementsEditor:
     ):
         self.config = config
         self._file_path = file_path or config.replacements_file
-        self._enable_backup = file_path is None
         self.window = tk.Toplevel(parent)
         self.window.title(title or '置換辞書登録( 置換前 , 置換後 )')
         self.window.geometry(f'{config.editor_width}x{config.editor_height}')
@@ -75,9 +73,6 @@ class ReplacementsEditor:
             with open(self._file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
 
-            if self._enable_backup:
-                self._copy_to_backup(self._file_path)
-
             messagebox.showinfo('保存完了', 'ファイルを保存しました')
             self.window.destroy()
 
@@ -85,19 +80,3 @@ class ReplacementsEditor:
             logging.error(f'ファイルの保存に失敗しました: {str(e)}')
             messagebox.showerror('エラー', f'ファイルの保存に失敗しました：\n{str(e)}')
 
-    def _copy_to_backup(self, source_path: str) -> None:
-        """保存後にbackupパスへコピー"""
-        backup_path = self.config.replacements_backup
-        if not backup_path:
-            return
-
-        backup_dir = os.path.dirname(backup_path)
-        if not os.path.exists(backup_dir):
-            logging.debug(f'バックアップ先ディレクトリが見つかりません: {backup_dir}')
-            return
-
-        try:
-            shutil.copy2(source_path, backup_path)
-            logging.info(f'置換辞書をバックアップしました: {backup_path}')
-        except Exception as e:
-            logging.warning(f'バックアップへのコピーに失敗しました: {str(e)}')

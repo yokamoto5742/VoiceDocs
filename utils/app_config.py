@@ -48,10 +48,6 @@ class AppConfig:
             return configured
         return os.path.join(self._default_data_dir(), configured)
 
-    @property
-    def replacements_backup(self) -> str:
-        return get_config_value(self._config, 'PATHS', 'REPLACEMENTS_BACKUP', '')
-
     # --- CLIPBOARD ---
     @property
     def paste_delay(self) -> float:
