@@ -9,7 +9,6 @@ from external_service.google_docs_api import setup_google_docs_client
 from external_service.google_stt_api import setup_google_stt_client
 from service.audio_file_manager import AudioFileManager
 from service.audio_recorder import AudioRecorder
-from service.clipboard_manager import ClipboardManager
 from service.docs_output import DocsOutput
 from service.recording_lifecycle import RecordingLifecycle
 from service.text_transformer import load_replacements
@@ -36,8 +35,6 @@ class Application:
         logging.info('Google STT APIクライアントを初期化しました')
 
         replacements = load_replacements(config.replacements_file)
-        clipboard_manager = ClipboardManager(config, replacements)
-        clipboard_manager.initialize()
 
         audio_file_manager = AudioFileManager(config)
 
@@ -65,7 +62,7 @@ class Application:
 
         recording_lifecycle = RecordingLifecycle(
             root, config, recorder, audio_file_manager,
-            transcription_handler, clipboard_manager, docs_output,
+            transcription_handler, docs_output,
             ui_processor, notification_manager.show_timed_message
         )
 

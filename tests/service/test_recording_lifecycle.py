@@ -6,7 +6,6 @@ import pytest
 
 from service.audio_file_manager import AudioFileManager
 from service.audio_recorder import AudioRecorder
-from service.clipboard_manager import ClipboardManager
 from service.docs_output import DocsOutput
 from service.recording_lifecycle import RecordingLifecycle
 from service.transcription_handler import TranscriptionHandler
@@ -34,7 +33,6 @@ def _make_lifecycle(config_dict: dict | None = None):
     transcription_handler.processing_thread = None
     transcription_handler.use_punctuation = True
 
-    clipboard_manager = Mock(spec=ClipboardManager)
     docs_output = Mock(spec=DocsOutput)
     ui_processor = Mock(spec=UIQueueProcessor)
     ui_processor.is_ui_valid.return_value = True
@@ -48,12 +46,12 @@ def _make_lifecycle(config_dict: dict | None = None):
 
         lifecycle = RecordingLifecycle(
             master, config, recorder, audio_file_manager,
-            transcription_handler, clipboard_manager, docs_output,
+            transcription_handler, docs_output,
             ui_processor, notification_callback
         )
         lifecycle.recording_timer = mock_timer
 
-    return lifecycle, master, recorder, audio_file_manager, transcription_handler, clipboard_manager, ui_processor
+    return lifecycle, master, recorder, audio_file_manager, transcription_handler, docs_output, ui_processor
 
 
 def _wire_callbacks(lifecycle: RecordingLifecycle):
@@ -68,13 +66,13 @@ class TestRecordingLifecycleInit:
 
     def test_init_success(self):
         """正常系: 正常初期化"""
-        lifecycle, master, recorder, afm, th, cm, ui = _make_lifecycle()
+        lifecycle, master, recorder, afm, th, docs, ui = _make_lifecycle()
 
         assert lifecycle.master == master
         assert lifecycle.recorder == recorder
         assert lifecycle.audio_file_manager == afm
         assert lifecycle.transcription_handler == th
-        assert lifecycle.clipboard_manager == cm
+        assert lifecycle.docs_output == docs
         assert lifecycle.ui_processor == ui
 
         afm.cleanup_temp_files.assert_called_once()
@@ -211,23 +209,23 @@ class TestRecordingLifecycleUsePunctuation:
 class TestRecordingLifecycleSafeUiUpdate:
     """_safe_ui_update()のテストクラス"""
 
-    def test_safe_ui_update_calls_clipboard(self):
-        """正常系: ClipboardManager.copy_and_pasteを呼ぶ"""
-        lifecycle, _, _, _, _, cm, ui = _make_lifecycle()
+    def test_safe_ui_update_calls_docs_append(self):
+        """正常系: DocsOutput.appendを呼ぶ"""
+        lifecycle, _, _, _, _, docs, ui = _make_lifecycle()
         ui.is_ui_valid.return_value = True
 
         lifecycle._safe_ui_update("テキスト")
 
-        cm.copy_and_paste.assert_called_once_with("テキスト")
+        docs.append.assert_called_once_with("テキスト")
 
     def test_safe_ui_update_skips_when_ui_invalid(self):
         """異常系: UI無効時はスキップ"""
-        lifecycle, _, _, _, _, cm, ui = _make_lifecycle()
+        lifecycle, _, _, _, _, docs, ui = _make_lifecycle()
         ui.is_ui_valid.return_value = False
 
         lifecycle._safe_ui_update("テキスト")
 
-        cm.copy_and_paste.assert_not_called()
+        docs.append.assert_not_called()
 
 
 class TestRecordingLifecycleCleanup:

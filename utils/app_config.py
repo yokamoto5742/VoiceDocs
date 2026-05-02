@@ -48,11 +48,6 @@ class AppConfig:
             return configured
         return os.path.join(self._default_data_dir(), configured)
 
-    # --- CLIPBOARD ---
-    @property
-    def paste_delay(self) -> float:
-        return get_config_value(self._config, 'CLIPBOARD', 'PASTE_DELAY', 0.3)
-
     # --- GOOGLE_STT ---
     @property
     def google_stt_model(self) -> str:
@@ -149,21 +144,6 @@ class AppConfig:
     @property
     def google_docs_placeholder_wait_timeout(self) -> int:
         return get_config_value(self._config, 'GOOGLE_DOCS', 'PLACEHOLDER_WAIT_TIMEOUT', 10)
-
-    # --- OUTPUT ---
-    @property
-    def output_mode(self) -> str:
-        """出力モード ('paste' または 'docs')"""
-        value = get_config_value(self._config, 'OUTPUT', 'MODE', 'paste')
-        return value if value in ('paste', 'docs') else 'paste'
-
-    @output_mode.setter
-    def output_mode(self, value: str) -> None:
-        if value not in ('paste', 'docs'):
-            raise ValueError(f'未知の出力モード: {value}')
-        if 'OUTPUT' not in self._config:
-            self._config['OUTPUT'] = {}
-        self._config['OUTPUT']['MODE'] = value
 
     # --- OPTIONS ---
     @property

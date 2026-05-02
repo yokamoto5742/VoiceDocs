@@ -2,17 +2,11 @@ import glob
 import logging
 import os
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox
 from typing import Callable, Dict, Optional
 
 from app.replacements_editor import ReplacementsEditor
 from utils.app_config import AppConfig
-
-OUTPUT_MODE_LABELS: Dict[str, str] = {
-    'paste': '貼り付けモード',
-    'docs': 'Docsモード',
-}
-OUTPUT_MODE_BY_LABEL: Dict[str, str] = {v: k for k, v in OUTPUT_MODE_LABELS.items()}
 
 
 class UIComponents:
@@ -27,10 +21,6 @@ class UIComponents:
         self.callbacks = callbacks
         self._toggle_recording = callbacks.get('toggle_recording', lambda: None)
         self._toggle_punctuation = callbacks.get('toggle_punctuation', lambda: None)
-        self._on_output_mode_change: Callable[[str], None] = callbacks.get(
-            'output_mode_change', lambda _mode: None
-        )
-        self.output_mode_combobox: Optional[ttk.Combobox] = None
         self.status_label: Optional[tk.Label] = None
         self.punctuation_status_label: Optional[tk.Label] = None
         self.punctuation_button: Optional[tk.Button] = None
@@ -44,8 +34,6 @@ class UIComponents:
     def setup_ui(self, version: str) -> None:
         self.master.title(f'VoiceDocs v{version}')
         self.master.geometry(f'{self.config.window_width}x{self.config.window_height}')
-
-        self._setup_output_mode_combobox()
 
         self.record_button = tk.Button(
             self.master,
@@ -116,36 +104,10 @@ class UIComponents:
         )
         self.status_label.pack(pady=10)
 
-    def _setup_output_mode_combobox(self) -> None:
-        """画面下部に出力モード選択用のプルダウンを配置する"""
-        frame = tk.Frame(self.master)
-        frame.pack(pady=10)
-
-        tk.Label(frame, text='出力モード:').pack(side=tk.LEFT, padx=(0, 5))
-
-        current_label = OUTPUT_MODE_LABELS.get(self.config.output_mode, OUTPUT_MODE_LABELS['paste'])
-        combobox = ttk.Combobox(
-            frame,
-            values=list(OUTPUT_MODE_LABELS.values()),
-            state='readonly',
-            width=15,
-        )
-        combobox.set(current_label)
-        combobox.bind('<<ComboboxSelected>>', self._handle_output_mode_change)
-        combobox.pack(side=tk.LEFT)
-        self.output_mode_combobox = combobox
-
-    def _handle_output_mode_change(self, _event: tk.Event) -> None:
-        assert self.output_mode_combobox is not None
-        label = self.output_mode_combobox.get()
-        mode = OUTPUT_MODE_BY_LABEL.get(label, 'paste')
-        self._on_output_mode_change(mode)
-
     def update_callbacks(self, callbacks: Dict[str, Callable]) -> None:
         self.callbacks = callbacks
         self._toggle_recording = callbacks.get('toggle_recording', self._toggle_recording)
         self._toggle_punctuation = callbacks.get('toggle_punctuation', self._toggle_punctuation)
-        self._on_output_mode_change = callbacks.get('output_mode_change', self._on_output_mode_change)
 
     def update_record_button(self, is_recording: bool) -> None:
         assert self.record_button is not None

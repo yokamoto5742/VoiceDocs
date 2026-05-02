@@ -8,7 +8,6 @@ from typing import Any, Callable, Dict
 from app.ui_queue_processor import UIQueueProcessor
 from service.audio_file_manager import AudioFileManager
 from service.audio_recorder import AudioRecorder
-from service.clipboard_manager import ClipboardManager
 from service.docs_output import DocsOutput
 from service.recording_timer import RecordingTimer
 from service.transcription_handler import TranscriptionHandler
@@ -16,7 +15,7 @@ from utils.app_config import AppConfig
 
 
 class RecordingLifecycle:
-    """録音開始、文字起こし、ペーストまでのライフサイクルを管理"""
+    """録音開始、文字起こし、Docs出力までのライフサイクルを管理"""
 
     def __init__(
             self,
@@ -25,7 +24,6 @@ class RecordingLifecycle:
             recorder: AudioRecorder,
             audio_file_manager: AudioFileManager,
             transcription_handler: TranscriptionHandler,
-            clipboard_manager: ClipboardManager,
             docs_output: DocsOutput,
             ui_processor: UIQueueProcessor,
             notification_callback: Callable
@@ -35,11 +33,9 @@ class RecordingLifecycle:
         self.recorder = recorder
         self.audio_file_manager = audio_file_manager
         self.transcription_handler = transcription_handler
-        self.clipboard_manager = clipboard_manager
         self.docs_output = docs_output
         self.ui_processor = ui_processor
         self.show_notification = notification_callback
-        self._output_mode = config.output_mode
 
         self._ui_callbacks: Dict[str, Callable] = {}
 
@@ -76,7 +72,7 @@ class RecordingLifecycle:
                 self._ui_callbacks['update_record_button'](False)
                 if self.recorder.is_recording:
                     self.recorder.stop_recording()
-                if self._output_mode == 'docs' and self.docs_output.is_available():
+                if self.docs_output.is_available():
                     self.docs_output.clear_placeholder()
         except Exception as e:
             logging.error(f'エラーハンドリング中にエラー: {str(e)}')
@@ -108,7 +104,7 @@ class RecordingLifecycle:
 
         self.transcription_handler.reset_cancel()
         self.recorder.start_recording()
-        if self._output_mode == 'docs' and self.docs_output.is_available():
+        if self.docs_output.is_available():
             self.docs_output.show_placeholder()
         self._ui_callbacks['update_record_button'](True)
         self._ui_callbacks['update_status_label'](
@@ -203,28 +199,15 @@ class RecordingLifecycle:
             )
 
     def _safe_ui_update(self, text: str) -> None:
-        """文字起こし完了後に出力モードに応じて貼り付けまたはDocs追記を実行する"""
+        """文字起こし完了後にDocsへ追記する"""
         try:
-            logging.debug(f'_safe_ui_update開始: text長={len(text)} mode={self._output_mode}')
+            logging.debug(f'_safe_ui_update開始: text長={len(text)}')
             if not self.ui_processor.is_ui_valid():
                 logging.warning('UIが無効なため、UI更新をスキップします')
                 return
-            if self._output_mode == 'docs':
-                self.docs_output.append(text)
-            else:
-                self.clipboard_manager.copy_and_paste(text)
+            self.docs_output.append(text)
         except Exception as e:
             logging.error(f'UI更新中にエラー: {str(e)}')
-
-    @property
-    def output_mode(self) -> str:
-        return self._output_mode
-
-    @output_mode.setter
-    def output_mode(self, value: str) -> None:
-        if value not in ('paste', 'docs'):
-            raise ValueError(f'未知の出力モード: {value}')
-        self._output_mode = value
 
     def cleanup(self) -> None:
         """リソースをクリーンアップする"""
