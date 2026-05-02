@@ -2,73 +2,50 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-VoiceDocs is a Windows-focused voice-to-text application for frequent short Japanese input (~200 entries/day). It uses Google Cloud Speech-to-Text V2 (Chirp 3) and Win32 SendInput for universal paste support.
-
 ## Commands
 
-```bash
-# Setup
-uv sync
-
-# Run
-python main.py
-
-# Tests
-python -m pytest tests/ -v --tb=short
-python -m pytest tests/path/to/test_file.py::test_name -v
-python -m pytest tests/ -v --tb=short --cov=app --cov-report=html
-
-# Type check
-pyright app service utils
-
-# Build executable
-python build.py
+```powershell
+uv sync                                                    # Install dependencies
+python -m pytest tests/ -v --tb=short                     # Run all tests
+python -m pytest tests/path/to/test_file.py -v --tb=short # Run single test file
+python -m pytest tests/ -v --tb=short --cov=app --cov-report=html  # With coverage
+pyright app service utils                                  # Type checking
+python main.py                                             # Run app
+python build.py                                            # Build VoiceDocs.exe
 ```
 
 ## Architecture
 
-Layered design: `app` (Tkinter UI) → `service` (pipeline) → `external_service` (Google APIs) → `utils` (config/env).
+Windows-only voice input desktop app for Japanese dictation. Layered design:
 
-**Core recording pipeline** (`service/`):
-1. `audio_recorder.py` — PyAudio mic input
-2. `audio_file_manager.py` — WAV file persistence (enables F8 retry)
-3. `transcription_handler.py` — background thread coordinator
-4. `google_stt_api.py` — Google Cloud STT V2 client
-5. `text_transformer.py` — punctuation control, CSV replacements, spacing cleanup
-6. Output: `clipboard_manager.py` → `paste_backend.py` (Win32 Ctrl+V) or `docs_output.py` (Google Docs append)
+```
+app/          UI layer (Tkinter) — windows, tray, notifications, hotkey wiring
+service/      Business logic — recording → transcription → docs output pipeline
+external_service/  API wrappers — Google Cloud STT, Google Docs
+utils/        Config, logging, .env loading
+```
 
-**UI layer** (`app/`):
-- `application.py` — wires all dependencies at startup
-- `main_window.py` (`VoiceInputManager`) — top-level orchestrator
-- `ui_queue_processor.py` — thread-safe UI updates via queue
+**Core recording flow:**
+1. `KeyboardHandler` (app/) detects hotkey → `RecordingLifecycle.start_recording()`
+2. `AudioRecorder` captures PCM frames; `RecordingTimer` auto-stops at 60s
+3. `TranscriptionHandler` sends frames to `google_stt_api.transcribe_pcm()` in a thread
+4. `TextTransformer` applies `data/replacements.txt` post-processing rules
+5. `DocsOutput` appends result to Google Docs
+6. All UI updates routed through `UIQueueProcessor` back to Tkinter main thread
 
-**Config** (`utils/`):
-- `app_config.py` — typed property facade
-- `config_manager.py` — INI file I/O (`utils/config.ini`)
-- `env_loader.py` — `.env` parsing (credentials, paths)
+**Entry points:** `main.py` → `app/application.py` → `service/recording_lifecycle.py`
 
-**Hotkeys:** Pause = record/stop, F8 = retry last audio, F9 = toggle punctuation, Esc = exit.
+## Key Configuration
 
-## Coding Standards
+- `utils/config.ini` — master config (audio, STT model, hotkeys, paths, logging)
+- `data/replacements.txt` — CSV `incorrect,correct` post-processing rules
+- `data/technical_terms.txt` — profession terms sent to STT as recognition hints
+- `.env` (not in repo) — `GOOGLE_CREDENTIALS_JSON`, `GOOGLE_PROJECT_ID`, `GOOGLE_LOCATION`
+
+## Coding Conventions
 
 - Type hints required on all parameters and return values
-- Functions ≤ 50 lines; single responsibility per function/module
-- Import order: stdlib → third-party → local (alphabetical within groups, `import` before `from`)
-- UI-facing strings in Japanese
-- Comments only for non-obvious logic, in Japanese, minimal
-
-## Data Files
-
-- `data/replacements.txt` — CSV (old,new) substitution rules applied post-transcription
-- `data/technical_terms.txt` — one phrase per line, sent as phrase hints to STT API
-
-## Environment
-
-`.env` required at project root:
-```
-GOOGLE_PROJECT_ID=...
-GOOGLE_LOCATION=asia-northeast1
-GOOGLE_CREDENTIALS_JSON={"type":"service_account",...}
-```
+- Functions ≤ 50 lines; single clear purpose per function/module
+- Import order: stdlib → third-party → local (alphabetical within each group; `import` before `from`)
+- UI-displayed messages must be in Japanese, defined as constants in `constants.py` — no magic strings
+- Comments only for non-obvious logic, written in Japanese; minimal docstrings
