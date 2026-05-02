@@ -4,6 +4,7 @@ import tkinter as tk
 from app import __version__
 from app.main_window import VoiceInputManager
 from app.notification_manager import NotificationManager
+from app.tray_manager import TrayManager
 from app.ui_queue_processor import UIQueueProcessor
 from external_service.google_docs_api import setup_google_docs_client
 from external_service.google_stt_api import setup_google_stt_client
@@ -21,6 +22,7 @@ from utils.log_rotation import setup_debug_logging, setup_logging
 class Application:
     def __init__(self) -> None:
         self._voice_manager: VoiceInputManager | None = None
+        self._tray_manager: TrayManager | None = None
 
     def run(self) -> None:
         raw_config = load_config()
@@ -66,13 +68,23 @@ class Application:
             ui_processor, notification_manager.show_timed_message
         )
 
+        self._tray_manager = TrayManager(root, quit_callback=self.close)
+
         self._voice_manager = VoiceInputManager(
-            root, config, recording_lifecycle, notification_manager, __version__
+            root, config, recording_lifecycle, notification_manager, __version__,
+            hide_callback=self._tray_manager.hide,
         )
 
-        root.protocol('WM_DELETE_WINDOW', self.close)
+        root.protocol('WM_DELETE_WINDOW', self._tray_manager.hide)
+        self._tray_manager.start()
+
+        if config.start_minimized:
+            root.withdraw()
+
         root.mainloop()
 
     def close(self) -> None:
+        if self._tray_manager:
+            self._tray_manager.stop()
         if self._voice_manager:
             self._voice_manager.close_application()

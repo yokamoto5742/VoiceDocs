@@ -1,6 +1,7 @@
 import logging
 import time
 import tkinter as tk
+from typing import Callable
 
 from app.notification_manager import NotificationManager
 from app.ui_components import UIComponents
@@ -17,7 +18,8 @@ class VoiceInputManager:
             config: AppConfig,
             recording_lifecycle: RecordingLifecycle,
             notification_manager: NotificationManager,
-            version: str
+            version: str,
+            hide_callback: Callable[[], None],
     ):
         self.master = master
         self.config = config
@@ -29,6 +31,7 @@ class VoiceInputManager:
             'toggle_recording': self.toggle_recording,
             'toggle_punctuation': self.toggle_punctuation,
             'reload_audio': lambda: None,
+            'hide_window': hide_callback,
         })
         self.ui_components.setup_ui(version)
 
@@ -36,6 +39,7 @@ class VoiceInputManager:
             'toggle_recording': self.toggle_recording,
             'toggle_punctuation': self.toggle_punctuation,
             'reload_audio': self.ui_components.reload_latest_audio,
+            'hide_window': hide_callback,
         })
 
         recording_lifecycle.wire_ui_callbacks(
@@ -49,13 +53,10 @@ class VoiceInputManager:
             self.toggle_recording,
             self.toggle_punctuation,
             self.ui_components.reload_latest_audio,
-            self.close_application,
+            hide_callback,
         )
 
         self.master.bind('<<LoadAudioFile>>', recording_lifecycle.handle_audio_file)
-
-        if config.start_minimized:
-            self.master.iconify()
 
     def toggle_recording(self) -> None:
         self.recording_lifecycle.toggle_recording()

@@ -7,6 +7,7 @@ def build_executable():
         "--name=VoiceDocs",
         "--windowed",
         "--icon=assets/VoiceDocs.ico",
+        "--add-data", "assets/VoiceDocs.ico:assets",
         "--add-data", "utils/config.ini:.",
         "--add-data", "data/replacements.txt:.",
         "--add-data", "data/technical_terms.txt:.",

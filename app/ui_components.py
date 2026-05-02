@@ -93,7 +93,7 @@ class UIComponents:
         self.close_button = tk.Button(
             self.master,
             text=f'閉じる:{self.config.exit_app_key}',
-            command=self.master.quit,
+            command=self.callbacks.get('hide_window', lambda: None),
             width=15
         )
         self.close_button.pack(pady=5)

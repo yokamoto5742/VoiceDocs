@@ -21,14 +21,14 @@ class KeyboardHandler:
             toggle_recording_callback: Callable,
             toggle_punctuation_callback: Callable,
             reload_audio_callback: Callable,
-            close_application_callback: Callable,
+            exit_key_callback: Callable,
     ):
         self.master = master
         self.config = config
         self._toggle_recording = toggle_recording_callback
         self._toggle_punctuation = toggle_punctuation_callback
         self._reload_audio = reload_audio_callback
-        self._close_application = close_application_callback
+        self._exit_key = exit_key_callback
         self._listener: Optional[pynput_keyboard.GlobalHotKeys] = None
         self.setup_keyboard_listeners()
 
@@ -66,7 +66,7 @@ class KeyboardHandler:
 
     def _handle_exit_key(self) -> None:
         try:
-            self.master.after(0, self._close_application)
+            self.master.after(0, self._exit_key)
         except Exception as e:
             logging.error(f"終了キー処理中にエラー: {e}")
 
